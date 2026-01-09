@@ -85,41 +85,153 @@
     <script>
         // --- 1. BANCO DE DADOS DE EXERCÍCIOS ---
         const exerciseDB = [
+            // --- PEITORAL ---
             { id: 'peito_01', name: 'Supino Reto (Barra)', category: 'Peitoral' },
-            { id: 'peito_02', name: 'Supino Inclinado (Halteres)', category: 'Peitoral' },
-            { id: 'peito_03', name: 'Crucifixo', category: 'Peitoral' },
-            { id: 'peito_04', name: 'Crossover Polia', category: 'Peitoral' },
-            { id: 'peito_05', name: 'Flexão de Braço', category: 'Peitoral' },
-            { id: 'costas_01', name: 'Puxada Alta', category: 'Costas' },
-            { id: 'costas_02', name: 'Remada Curvada', category: 'Costas' },
-            { id: 'costas_03', name: 'Remada Cavalinho', category: 'Costas' },
-            { id: 'costas_04', name: 'Barra Fixa', category: 'Costas' },
-            { id: 'costas_05', name: 'Levantamento Terra', category: 'Costas' },
-            { id: 'pernas_01', name: 'Agachamento Livre', category: 'Pernas' },
-            { id: 'pernas_02', name: 'Leg Press 45', category: 'Pernas' },
-            { id: 'pernas_03', name: 'Cadeira Extensora', category: 'Pernas' },
-            { id: 'pernas_04', name: 'Mesa Flexora', category: 'Pernas' },
-            { id: 'pernas_05', name: 'Stiff', category: 'Pernas' },
-            { id: 'pernas_06', name: 'Elevação Pélvica', category: 'Pernas' },
-            { id: 'pernas_07', name: 'Panturrilha em Pé', category: 'Pernas' },
-            { id: 'ombros_01', name: 'Desenvolvimento Militar', category: 'Ombros' },
-            { id: 'ombros_02', name: 'Elevação Lateral', category: 'Ombros' },
-            { id: 'ombros_03', name: 'Elevação Frontal', category: 'Ombros' },
-            { id: 'ombros_04', name: 'Crucifixo Inverso', category: 'Ombros' },
-            { id: 'biceps_01', name: 'Rosca Direta', category: 'Bíceps' },
-            { id: 'biceps_02', name: 'Rosca Martelo', category: 'Bíceps' },
-            { id: 'biceps_03', name: 'Rosca Scott', category: 'Bíceps' },
-            { id: 'triceps_01', name: 'Tríceps Polia (Corda)', category: 'Tríceps' },
-            { id: 'triceps_02', name: 'Tríceps Testa', category: 'Tríceps' },
-            { id: 'triceps_03', name: 'Mergulho (Paralelas)', category: 'Tríceps' },
-            { id: 'abs_01', name: 'Abdominal Supra', category: 'Abdômen' },
-            { id: 'abs_02', name: 'Prancha', category: 'Abdômen' },
-            { id: 'abs_03', name: 'Elevação de Pernas', category: 'Abdômen' },
-            { id: 'cardio_01', name: 'Esteira', category: 'Cardio' },
-            { id: 'cardio_02', name: 'Bicicleta', category: 'Cardio' },
-            { id: 'cardio_03', name: 'Elíptico', category: 'Cardio' },
-            { id: 'cardio_04', name: 'Pular Corda', category: 'Cardio' },
-            { id: 'along_01', name: 'Alongamento Geral', category: 'Alongamento' }
+            { id: 'peito_02', name: 'Supino Reto (Halteres)', category: 'Peitoral' },
+            { id: 'peito_03', name: 'Supino Reto (Máquina)', category: 'Peitoral' },
+            { id: 'peito_04', name: 'Supino Inclinado (Barra)', category: 'Peitoral' },
+            { id: 'peito_05', name: 'Supino Inclinado (Halteres)', category: 'Peitoral' },
+            { id: 'peito_06', name: 'Supino Inclinado (Máquina)', category: 'Peitoral' },
+            { id: 'peito_07', name: 'Supino Declinado (Barra)', category: 'Peitoral' },
+            { id: 'peito_08', name: 'Supino Declinado (Halteres)', category: 'Peitoral' },
+            { id: 'peito_09', name: 'Crucifixo Reto (Halteres)', category: 'Peitoral' },
+            { id: 'peito_10', name: 'Crucifixo Inclinado (Halteres)', category: 'Peitoral' },
+            { id: 'peito_11', name: 'Peck Deck (Voador)', category: 'Peitoral' },
+            { id: 'peito_12', name: 'Crossover Polia Alta', category: 'Peitoral' },
+            { id: 'peito_13', name: 'Crossover Polia Média', category: 'Peitoral' },
+            { id: 'peito_14', name: 'Crossover Polia Baixa', category: 'Peitoral' },
+            { id: 'peito_15', name: 'Flexão de Braço (Solo)', category: 'Peitoral' },
+            { id: 'peito_16', name: 'Flexão de Braço (Inclinada)', category: 'Peitoral' },
+            { id: 'peito_17', name: 'Flexão de Braço (Declinada)', category: 'Peitoral' },
+            { id: 'peito_18', name: 'Pullover (Halter)', category: 'Peitoral' },
+            { id: 'peito_19', name: 'Supino Vertical (Sentado)', category: 'Peitoral' },
+            
+            // --- COSTAS ---
+            { id: 'costas_01', name: 'Puxada Alta (Aberta)', category: 'Costas' },
+            { id: 'costas_02', name: 'Puxada Alta (Fechada/Triângulo)', category: 'Costas' },
+            { id: 'costas_03', name: 'Puxada Alta (Supinada)', category: 'Costas' },
+            { id: 'costas_04', name: 'Remada Curvada (Barra)', category: 'Costas' },
+            { id: 'costas_05', name: 'Remada Curvada (Halteres)', category: 'Costas' },
+            { id: 'costas_06', name: 'Remada Unilateral (Serrote)', category: 'Costas' },
+            { id: 'costas_07', name: 'Remada Baixa (Polia/Triângulo)', category: 'Costas' },
+            { id: 'costas_08', name: 'Remada Máquina (Aberta)', category: 'Costas' },
+            { id: 'costas_09', name: 'Remada Máquina (Fechada)', category: 'Costas' },
+            { id: 'costas_10', name: 'Remada Cavalinho', category: 'Costas' },
+            { id: 'costas_11', name: 'Barra Fixa (Pronada)', category: 'Costas' },
+            { id: 'costas_12', name: 'Barra Fixa (Supinada)', category: 'Costas' },
+            { id: 'costas_13', name: 'Barra Fixa (Neutra)', category: 'Costas' },
+            { id: 'costas_14', name: 'Levantamento Terra', category: 'Costas' },
+            { id: 'costas_15', name: 'Pulldown (Polia Alta)', category: 'Costas' },
+            { id: 'costas_16', name: 'Extensão de Tronco (Banco Romano)', category: 'Costas' },
+            { id: 'costas_17', name: 'Good Morning', category: 'Costas' },
+            
+            // --- PERNAS (Quadríceps, Posterior, Glúteo, Panturrilha) ---
+            { id: 'pernas_01', name: 'Agachamento Livre (Barra)', category: 'Pernas' },
+            { id: 'pernas_02', name: 'Agachamento Frontal', category: 'Pernas' },
+            { id: 'pernas_03', name: 'Agachamento Smith', category: 'Pernas' },
+            { id: 'pernas_04', name: 'Agachamento Sumô', category: 'Pernas' },
+            { id: 'pernas_05', name: 'Agachamento Hack', category: 'Pernas' },
+            { id: 'pernas_06', name: 'Agachamento Búlgaro', category: 'Pernas' },
+            { id: 'pernas_07', name: 'Afundo (Passada)', category: 'Pernas' },
+            { id: 'pernas_08', name: 'Leg Press 45', category: 'Pernas' },
+            { id: 'pernas_09', name: 'Leg Press Horizontal', category: 'Pernas' },
+            { id: 'pernas_10', name: 'Cadeira Extensora', category: 'Pernas' },
+            { id: 'pernas_11', name: 'Mesa Flexora', category: 'Pernas' },
+            { id: 'pernas_12', name: 'Cadeira Flexora', category: 'Pernas' },
+            { id: 'pernas_13', name: 'Flexora em Pé', category: 'Pernas' },
+            { id: 'pernas_14', name: 'Stiff (Barra)', category: 'Pernas' },
+            { id: 'pernas_15', name: 'Stiff (Halteres)', category: 'Pernas' },
+            { id: 'pernas_16', name: 'Levantamento Terra Romeno', category: 'Pernas' },
+            { id: 'pernas_17', name: 'Elevação Pélvica (Barra)', category: 'Pernas' },
+            { id: 'pernas_18', name: 'Elevação Pélvica (Máquina)', category: 'Pernas' },
+            { id: 'pernas_19', name: 'Cadeira Abdutora', category: 'Pernas' },
+            { id: 'pernas_20', name: 'Cadeira Adutora', category: 'Pernas' },
+            { id: 'pernas_21', name: 'Glúteo Caneleira (4 Apoios)', category: 'Pernas' },
+            { id: 'pernas_22', name: 'Glúteo Polia (Cabo)', category: 'Pernas' },
+            { id: 'pernas_23', name: 'Panturrilha em Pé (Máquina)', category: 'Pernas' },
+            { id: 'pernas_24', name: 'Panturrilha Sentado (Máquina)', category: 'Pernas' },
+            { id: 'pernas_25', name: 'Panturrilha no Leg Press', category: 'Pernas' },
+            { id: 'pernas_26', name: 'Panturrilha Unilateral (Halter)', category: 'Pernas' },
+
+            // --- OMBROS (Deltoides e Trapézio) ---
+            { id: 'ombros_01', name: 'Desenvolvimento Militar (Barra)', category: 'Ombros' },
+            { id: 'ombros_02', name: 'Desenvolvimento (Halteres)', category: 'Ombros' },
+            { id: 'ombros_03', name: 'Desenvolvimento Máquina', category: 'Ombros' },
+            { id: 'ombros_04', name: 'Desenvolvimento Arnold', category: 'Ombros' },
+            { id: 'ombros_05', name: 'Elevação Lateral (Halteres)', category: 'Ombros' },
+            { id: 'ombros_06', name: 'Elevação Lateral (Polia)', category: 'Ombros' },
+            { id: 'ombros_07', name: 'Elevação Frontal (Halteres)', category: 'Ombros' },
+            { id: 'ombros_08', name: 'Elevação Frontal (Barra)', category: 'Ombros' },
+            { id: 'ombros_09', name: 'Elevação Frontal (Polia)', category: 'Ombros' },
+            { id: 'ombros_10', name: 'Crucifixo Inverso (Halteres)', category: 'Ombros' },
+            { id: 'ombros_11', name: 'Crucifixo Inverso (Máquina)', category: 'Ombros' },
+            { id: 'ombros_12', name: 'Face Pull (Polia)', category: 'Ombros' },
+            { id: 'ombros_13', name: 'Remada Alta (Barra)', category: 'Ombros' },
+            { id: 'ombros_14', name: 'Encolhimento (Halteres)', category: 'Ombros' },
+            { id: 'ombros_15', name: 'Encolhimento (Barra)', category: 'Ombros' },
+
+            // --- BÍCEPS ---
+            { id: 'biceps_01', name: 'Rosca Direta (Barra Reta)', category: 'Bíceps' },
+            { id: 'biceps_02', name: 'Rosca Direta (Barra W)', category: 'Bíceps' },
+            { id: 'biceps_03', name: 'Rosca Direta (Halteres)', category: 'Bíceps' },
+            { id: 'biceps_04', name: 'Rosca Direta (Polia)', category: 'Bíceps' },
+            { id: 'biceps_05', name: 'Rosca Alternada', category: 'Bíceps' },
+            { id: 'biceps_06', name: 'Rosca Martelo (Halteres)', category: 'Bíceps' },
+            { id: 'biceps_07', name: 'Rosca Martelo (Corda)', category: 'Bíceps' },
+            { id: 'biceps_08', name: 'Rosca Scott (Barra W)', category: 'Bíceps' },
+            { id: 'biceps_09', name: 'Rosca Scott (Máquina)', category: 'Bíceps' },
+            { id: 'biceps_10', name: 'Rosca Concentrada', category: 'Bíceps' },
+            { id: 'biceps_11', name: 'Rosca Inclinada (Banco 45)', category: 'Bíceps' },
+            { id: 'biceps_12', name: 'Rosca 21', category: 'Bíceps' },
+
+            // --- TRÍCEPS ---
+            { id: 'triceps_01', name: 'Tríceps Polia (Barra Reta)', category: 'Tríceps' },
+            { id: 'triceps_02', name: 'Tríceps Polia (Barra V)', category: 'Tríceps' },
+            { id: 'triceps_03', name: 'Tríceps Corda', category: 'Tríceps' },
+            { id: 'triceps_04', name: 'Tríceps Testa (Barra W)', category: 'Tríceps' },
+            { id: 'triceps_05', name: 'Tríceps Testa (Halteres)', category: 'Tríceps' },
+            { id: 'triceps_06', name: 'Tríceps Francês (Halter)', category: 'Tríceps' },
+            { id: 'triceps_07', name: 'Tríceps Francês (Corda)', category: 'Tríceps' },
+            { id: 'triceps_08', name: 'Tríceps Coice (Halter)', category: 'Tríceps' },
+            { id: 'triceps_09', name: 'Tríceps Coice (Polia)', category: 'Tríceps' },
+            { id: 'triceps_10', name: 'Mergulho (Paralelas)', category: 'Tríceps' },
+            { id: 'triceps_11', name: 'Mergulho (Banco)', category: 'Tríceps' },
+            { id: 'triceps_12', name: 'Supino Fechado', category: 'Tríceps' },
+
+            // --- ABDÔMEN ---
+            { id: 'abs_01', name: 'Abdominal Supra (Solo)', category: 'Abdômen' },
+            { id: 'abs_02', name: 'Abdominal Infra (Solo)', category: 'Abdômen' },
+            { id: 'abs_03', name: 'Abdominal Remador', category: 'Abdômen' },
+            { id: 'abs_04', name: 'Abdominal Bicicleta', category: 'Abdômen' },
+            { id: 'abs_05', name: 'Prancha Isométrica', category: 'Abdômen' },
+            { id: 'abs_06', name: 'Prancha Lateral', category: 'Abdômen' },
+            { id: 'abs_07', name: 'Elevação de Pernas (Barra)', category: 'Abdômen' },
+            { id: 'abs_08', name: 'Abdominal na Polia (Crunch)', category: 'Abdômen' },
+            { id: 'abs_09', name: 'Abdominal Máquina', category: 'Abdômen' },
+            { id: 'abs_10', name: 'Russian Twist', category: 'Abdômen' },
+            { id: 'abs_11', name: 'V-Up', category: 'Abdômen' },
+            { id: 'abs_12', name: 'Roda Abdominal', category: 'Abdômen' },
+
+            // --- CARDIO ---
+            { id: 'cardio_01', name: 'Esteira (Caminhada)', category: 'Cardio' },
+            { id: 'cardio_02', name: 'Esteira (Corrida)', category: 'Cardio' },
+            { id: 'cardio_03', name: 'Esteira (Inclinada)', category: 'Cardio' },
+            { id: 'cardio_04', name: 'Bicicleta Ergométrica', category: 'Cardio' },
+            { id: 'cardio_05', name: 'Bicicleta Spinning', category: 'Cardio' },
+            { id: 'cardio_06', name: 'Elíptico (Transport)', category: 'Cardio' },
+            { id: 'cardio_07', name: 'Escada (Simulador)', category: 'Cardio' },
+            { id: 'cardio_08', name: 'Remo (Ergômetro)', category: 'Cardio' },
+            { id: 'cardio_09', name: 'Pular Corda', category: 'Cardio' },
+            { id: 'cardio_10', name: 'Polichinelos', category: 'Cardio' },
+            { id: 'cardio_11', name: 'Burpees', category: 'Cardio' },
+            { id: 'cardio_12', name: 'Box Jump', category: 'Cardio' },
+
+            // --- ALONGAMENTO / MOBILIDADE ---
+            { id: 'along_01', name: 'Alongamento Geral', category: 'Alongamento' },
+            { id: 'along_02', name: 'Mobilidade de Ombro', category: 'Alongamento' },
+            { id: 'along_03', name: 'Mobilidade de Quadril', category: 'Alongamento' },
+            { id: 'along_04', name: 'Mobilidade de Tornozelo', category: 'Alongamento' },
+            { id: 'along_05', name: 'Liberação Miofascial', category: 'Alongamento' }
         ];
 
         // --- 2. GESTÃO DE ESTADO E DADOS ---
@@ -252,6 +364,11 @@
             deletePlan(id) {
                 this.data.plans = this.data.plans.filter(p => p.id !== id);
                 this.save();
+                
+                // Se o plano deletado for o ativo, encerra a sessão
+                if (this.activeSession.current && this.activeSession.current.planId === id) {
+                    this.activeSession.end();
+                }
             },
 
             saveLog(log) {
@@ -259,11 +376,28 @@
                 this.save();
             },
 
-            exportData() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.data));
+            exportData(type = 'all', specificIds = null) {
+                let dataToExport = {};
+                let fileNamePrefix = 'irontrack_backup_';
+
+                if (type === 'history') {
+                    dataToExport = { logs: this.data.logs, version: this.data.version };
+                    fileNamePrefix = 'irontrack_history_';
+                } else if (type === 'plans') {
+                    let plansToExport = this.data.plans;
+                    if (specificIds && Array.isArray(specificIds)) {
+                        plansToExport = plansToExport.filter(p => specificIds.includes(p.id));
+                    }
+                    dataToExport = { plans: plansToExport, version: this.data.version };
+                    fileNamePrefix = 'irontrack_plans_';
+                } else {
+                    dataToExport = this.data;
+                }
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(dataToExport));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
-                downloadAnchorNode.setAttribute("download", "irontrack_backup_" + new Date().toISOString().slice(0,10) + ".json");
+                downloadAnchorNode.setAttribute("download", fileNamePrefix + new Date().toISOString().slice(0,10) + ".json");
                 document.body.appendChild(downloadAnchorNode);
                 downloadAnchorNode.click();
                 downloadAnchorNode.remove();
@@ -274,16 +408,32 @@
                 reader.onload = (e) => {
                     try {
                         const imported = JSON.parse(e.target.result);
-                        if(imported.plans && imported.logs) {
+                        let msg = '';
+
+                        // Lógica de Merge Inteligente
+                        if (imported.plans && !imported.logs) {
+                            // Importando apenas Planos
+                            this.data.plans = imported.plans;
+                            msg = 'Planos importados com sucesso! Seu histórico foi mantido.';
+                        } else if (imported.logs && !imported.plans) {
+                            // Importando apenas Histórico
+                            this.data.logs = imported.logs;
+                            msg = 'Histórico importado com sucesso! Seus planos foram mantidos.';
+                        } else if (imported.plans && imported.logs) {
+                            // Importando Completo
                             this.data = imported;
-                            this.save();
-                            alert('Dados importados com sucesso!');
-                            router.navigate('home');
+                            msg = 'Backup completo restaurado com sucesso!';
                         } else {
-                            alert('Arquivo inválido.');
+                            throw new Error('Formato inválido');
                         }
+
+                        this.save();
+                        ui.showToast(msg);
+                        router.navigate('home');
+                        
                     } catch (ex) {
-                        alert('Erro ao ler arquivo JSON.');
+                        ui.showToast('Erro: Arquivo inválido ou corrompido.', 'error');
+                        console.error(ex);
                     }
                 };
                 reader.readAsText(file);
@@ -382,7 +532,61 @@
                     toast.style.transition = 'all 0.3s';
                     setTimeout(() => toast.remove(), 300);
                 }, 3000);
-            }
+            },
+
+            showPlanSelectionModal() {
+                const container = document.getElementById('modal-container');
+                container.classList.remove('hidden');
+
+                const plans = store.data.plans;
+                if (plans.length === 0) {
+                    ui.showToast('Nenhum plano para exportar.', 'info');
+                    container.classList.add('hidden');
+                    return;
+                }
+
+                const plansHtml = plans.map(p => `
+                    <label class="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-700/50 cursor-pointer border border-slate-700 transition">
+                        <input type="checkbox" value="${p.id}" checked class="form-checkbox h-5 w-5 text-blue-600 rounded bg-slate-700 border-slate-500 focus:ring-blue-500 focus:ring-offset-slate-800">
+                        <span class="text-white font-medium">${p.name}</span>
+                    </label>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="relative transform overflow-hidden rounded-2xl bg-slate-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-700 w-full max-w-sm mx-auto fade-in ring-1 ring-white/10">
+                        <div class="bg-slate-800 px-6 pb-6 pt-6">
+                            <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-clipboard-check text-blue-500"></i> Selecionar Planos
+                            </h3>
+                            <div class="max-h-60 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
+                                ${plansHtml}
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+                            <button id="modal-export-confirm-btn" class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-3 text-base font-bold text-white shadow-lg hover:bg-blue-500 sm:ml-3 sm:w-auto transition transform active:scale-[0.98]">
+                                Exportar Selecionados
+                            </button>
+                            <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="inline-flex w-full justify-center rounded-xl bg-slate-800 px-4 py-3 text-base font-semibold text-slate-300 shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-700 sm:mt-0 sm:w-auto transition active:scale-[0.98]">
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('modal-export-confirm-btn').onclick = () => {
+                    const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+                    const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+                    
+                    if (selectedIds.length === 0) {
+                        ui.showToast('Selecione pelo menos um plano.', 'error');
+                        return;
+                    }
+
+                    store.exportData('plans', selectedIds);
+                    container.classList.add('hidden');
+                    ui.showToast(`${selectedIds.length} plano(s) exportado(s).`);
+                };
+            },
         };
 
         // --- 3. ROTEAMENTO E VIEWS ---
@@ -1027,36 +1231,104 @@
             renderExercises(container) {
                 container.innerHTML = `
                     <div class="fade-in space-y-4">
-                        <input type="text" id="ex-search-input" aria-label="Pesquisar exercícios" placeholder="Buscar exercício..." class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition">
-                        <div id="ex-list-full" class="space-y-2"></div>
+                        <div class="relative">
+                            <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                            <input type="text" id="ex-search-input" aria-label="Pesquisar exercícios" placeholder="Buscar exercício (ex: Supino)..." class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 pl-11 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition">
+                        </div>
+                        <div id="ex-list-full" class="space-y-3 pb-20"></div>
                     </div>
                 `;
+
+                const categoryIcons = {
+                    'Peitoral': 'fa-dumbbell',
+                    'Costas': 'fa-child-reaching',
+                    'Pernas': 'fa-person-running',
+                    'Ombros': 'fa-user-ninja',
+                    'Bíceps': 'fa-hand-fist',
+                    'Tríceps': 'fa-hand-back-fist',
+                    'Abdômen': 'fa-table-cells',
+                    'Cardio': 'fa-heart-pulse',
+                    'Alongamento': 'fa-person-praying'
+                };
 
                 const renderFullList = (filter = '') => {
                     const el = document.getElementById('ex-list-full');
                     el.innerHTML = '';
                     
+                    const isSearching = filter.length > 0;
+                    const cleanFilter = filter.toLowerCase();
+
                     // Agrupar por Categoria
                     const groups = {};
-                    exerciseDB
-                        .filter(e => e.name.toLowerCase().includes(filter.toLowerCase()) || e.category.toLowerCase().includes(filter.toLowerCase()))
-                        .forEach(ex => {
-                            if(!groups[ex.category]) groups[ex.category] = [];
-                            groups[ex.category].push(ex);
+                    exerciseDB.forEach(ex => {
+                        // Filtra
+                        if (isSearching) {
+                            const matchName = ex.name.toLowerCase().includes(cleanFilter);
+                            const matchCat = ex.category.toLowerCase().includes(cleanFilter);
+                            if (!matchName && !matchCat) return;
+                        }
+
+                        if(!groups[ex.category]) groups[ex.category] = [];
+                        groups[ex.category].push(ex);
+                    });
+
+                    const categories = Object.keys(groups);
+
+                    if (categories.length === 0) {
+                        el.innerHTML = `
+                            <div class="text-center text-slate-500 py-8">
+                                <i class="fa-solid fa-dumbbell text-4xl mb-3 opacity-20"></i>
+                                <p>Nenhum exercício encontrado.</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    categories.forEach(cat => {
+                        const exercises = groups[cat];
+                        const icon = categoryIcons[cat] || 'fa-dumbbell';
+                        const isOpen = isSearching; // Abre tudo se estiver pesquisando
+
+                        // Container da Categoria
+                        const catContainer = document.createElement('div');
+                        catContainer.className = 'bg-slate-800 rounded-xl overflow-hidden border border-slate-700 transition-all duration-300';
+                        
+                        // Header (Botão Accordion)
+                        const header = document.createElement('button');
+                        header.className = 'w-full px-4 py-4 flex justify-between items-center bg-slate-800 hover:bg-slate-750 transition active:bg-slate-700 text-left';
+                        header.onclick = () => {
+                            const list = document.getElementById(`list-${cat}`);
+                            const chevron = document.getElementById(`chevron-${cat}`);
+                            list.classList.toggle('hidden');
+                            chevron.classList.toggle('rotate-180');
+                        };
+
+                        header.innerHTML = `
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-900/30 flex items-center justify-center text-blue-400">
+                                    <i class="fa-solid ${icon}"></i>
+                                </div>
+                                <span class="font-bold text-slate-200">${cat}</span>
+                                <span class="text-xs text-slate-500 bg-slate-900 px-2 py-0.5 rounded-full">${exercises.length}</span>
+                            </div>
+                            <i id="chevron-${cat}" class="fa-solid fa-chevron-down text-slate-500 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}"></i>
+                        `;
+
+                        // Lista de Itens
+                        const list = document.createElement('div');
+                        list.id = `list-${cat}`;
+                        list.className = `divide-y divide-slate-700/50 bg-slate-900/30 ${isOpen ? '' : 'hidden'}`;
+                        
+                        exercises.forEach(ex => {
+                            const item = document.createElement('div');
+                            item.className = 'px-4 py-3 text-sm text-slate-300 flex items-center gap-2 hover:bg-slate-700/30 transition';
+                            item.innerHTML = `<i class="fa-solid fa-caret-right text-xs text-blue-500/50"></i> ${ex.name}`;
+                            list.appendChild(item);
                         });
 
-                    Object.keys(groups).forEach(cat => {
-                        const catDiv = document.createElement('div');
-                        catDiv.className = 'mb-4';
-                        catDiv.innerHTML = `<h3 class="text-blue-400 font-bold text-sm uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">${cat}</h3>`;
-                        
-                        groups[cat].forEach(ex => {
-                            const item = document.createElement('div');
-                            item.className = 'bg-slate-800 p-3 rounded mb-2 border border-slate-700 flex justify-between';
-                            item.innerHTML = `<span class="text-slate-200">${ex.name}</span>`;
-                            catDiv.appendChild(item);
-                        });
-                        el.appendChild(catDiv);
+                        catContainer.appendChild(header);
+                        catContainer.appendChild(list);
+                        el.appendChild(catContainer);
                     });
                 };
 
@@ -1072,15 +1344,25 @@
                             <h3 class="text-lg font-bold text-white mb-2">Gerenciar Dados</h3>
                             <p class="text-sm text-slate-400 mb-4">Exporte seus treinos para salvar um backup ou importe em outro dispositivo.</p>
                             
-                            <div class="grid grid-cols-2 gap-4">
-                                <button onclick="store.exportData()" aria-label="Exportar dados para arquivo JSON" class="bg-blue-600 hover:bg-blue-500 text-white py-2 rounded flex flex-col items-center justify-center gap-2 transition active:scale-95">
-                                    <i class="fa-solid fa-download text-xl"></i>
-                                    <span>Exportar</span>
-                                </button>
-                                
-                                <label aria-label="Importar dados de arquivo JSON" class="bg-slate-700 hover:bg-slate-600 text-white py-2 rounded flex flex-col items-center justify-center gap-2 cursor-pointer transition active:scale-95">
+                            <div class="space-y-4">
+                                <!-- Opções de Exportação -->
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                                    <button onclick="store.exportData('all')" class="bg-blue-600 hover:bg-blue-500 text-white py-3 px-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-download"></i> Tudo
+                                    </button>
+                                    <button onclick="store.exportData('history')" class="bg-slate-700 hover:bg-slate-600 text-white py-3 px-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-clock-rotate-left"></i> Só Histórico
+                                    </button>
+                                    <button onclick="ui.showPlanSelectionModal()" class="bg-slate-700 hover:bg-slate-600 text-white py-3 px-2 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2">
+                                        <i class="fa-solid fa-clipboard-list"></i> Só Planos
+                                    </button>
+                                </div>
+
+                                <!-- Importação -->
+                                <label aria-label="Importar dados de arquivo JSON" class="w-full bg-slate-700 hover:bg-slate-600 text-white py-4 rounded-xl flex flex-col items-center justify-center gap-2 cursor-pointer transition active:scale-95 border border-dashed border-slate-500 hover:border-white">
                                     <i class="fa-solid fa-upload text-xl"></i>
-                                    <span>Importar</span>
+                                    <span class="font-bold">Importar Arquivo JSON</span>
+                                    <span class="text-xs text-slate-400 font-normal">Restaura planos, histórico ou ambos</span>
                                     <input type="file" id="import-file" class="hidden" accept=".json" onchange="store.importData(this.files[0])">
                                 </label>
                             </div>
@@ -1091,7 +1373,7 @@
                             <p class="text-sm text-slate-400">IronTrack v1.0</p>
                             <p class="text-xs text-slate-500 mt-2">Armazenamento local em uso: ${(JSON.stringify(store.data).length / 1024).toFixed(2)} KB</p>
                             
-                            <button onclick="if(confirm('Tem certeza? Isso apagará TUDO.')) { localStorage.removeItem('ironTrackData'); location.reload(); }" class="mt-4 text-red-500 text-xs hover:text-red-400 underline">
+                            <button onclick="ui.showModal({ title: 'Apagar Tudo', message: 'Tem certeza absoluta? Todos os seus treinos e histórico serão apagados permanentemente.', type: 'danger', confirmText: 'Sim, Apagar Tudo', onConfirm: () => { localStorage.removeItem('ironTrackData'); localStorage.removeItem('ironTrackActiveSession'); location.reload(); } })" class="mt-4 text-red-500 text-xs hover:text-red-400 underline cursor-pointer">
                                 Resetar todos os dados
                             </button>
                         </div>
