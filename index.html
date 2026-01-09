@@ -56,6 +56,13 @@
                     <i class="fa-solid fa-calendar-check text-xl mb-1"></i>
                     <span class="text-xs">Histórico</span>
                 </button>
+                
+                <!-- Botão de Treino Ativo (Dinâmico) -->
+                <button id="nav-active-session" onclick="router.navigate('active-session')" aria-label="Ir para Treino Ativo" class="hidden nav-btn flex flex-col items-center text-blue-500 hover:text-blue-400 transition w-full animate-pulse" data-target="active-session">
+                    <i class="fa-solid fa-heart-pulse text-xl mb-1"></i>
+                    <span class="text-xs font-bold">Treinando</span>
+                </button>
+
                 <button onclick="router.navigate('exercises')" aria-label="Ir para Exercícios" class="nav-btn flex flex-col items-center text-slate-400 hover:text-blue-400 active:text-blue-500 transition w-full" data-target="exercises">
                     <i class="fa-solid fa-list-ul text-xl mb-1"></i>
                     <span class="text-xs">Exercícios</span>
@@ -123,6 +130,84 @@
                 version: 1.0
             },
             
+            // Gerenciador de Sessão Ativa Global
+            activeSession: {
+                current: null, // { planId, startTime, exercises: [], ... }
+                timerId: null,
+                
+                saveSession() {
+                    if (this.current) {
+                        localStorage.setItem('ironTrackActiveSession', JSON.stringify(this.current));
+                    } else {
+                        localStorage.removeItem('ironTrackActiveSession');
+                    }
+                },
+
+                loadSession() {
+                    const saved = localStorage.getItem('ironTrackActiveSession');
+                    if (saved) {
+                        try {
+                            this.current = JSON.parse(saved);
+                            // Se carregou uma sessão, verifica se o timer deve continuar
+                            if (this.current && this.current.startTime) {
+                                this.startTimer();
+                                this.updateNavVisibility(true);
+                            }
+                        } catch (e) {
+                            console.error("Erro ao carregar sessão ativa", e);
+                            this.current = null;
+                        }
+                    }
+                },
+
+                start(plan, initialExercises) {
+                    if (this.current) return; // Já existe sessão ativa
+                    this.current = {
+                        planId: plan.id,
+                        planName: plan.name,
+                        startTime: Date.now(),
+                        exercises: initialExercises
+                    };
+                    this.saveSession(); // Persiste inicio
+                    this.startTimer();
+                    this.updateNavVisibility(true);
+                },
+
+                startTimer() {
+                    if (this.timerId) clearInterval(this.timerId);
+                    this.timerId = setInterval(() => {
+                        const timerEl = document.getElementById('session-timer');
+                        if (timerEl && this.current) {
+                            const diff = Math.floor((Date.now() - this.current.startTime) / 1000);
+                            const m = Math.floor(diff / 60).toString().padStart(2, '0');
+                            const s = (diff % 60).toString().padStart(2, '0');
+                            timerEl.innerText = `${m}:${s}`;
+                        }
+                    }, 1000);
+                },
+
+                end() {
+                    this.current = null;
+                    this.saveSession(); // Persiste fim (remove)
+                    if (this.timerId) {
+                        clearInterval(this.timerId);
+                        this.timerId = null;
+                    }
+                    this.updateNavVisibility(false);
+                },
+
+                updateNavVisibility(isVisible) {
+                    const btn = document.getElementById('nav-active-session');
+                    if (btn) {
+                        if(isVisible) {
+                            btn.classList.remove('hidden');
+                        } else {
+                            btn.classList.add('hidden');
+                        }
+                    }
+                }
+            },
+            
             init() {
                 const saved = localStorage.getItem('ironTrackData');
                 if (saved) {
@@ -136,6 +221,9 @@
                     this.createPlan("Treino A - Peito e Tríceps", ['peito_01', 'peito_02', 'triceps_01']);
                     this.createPlan("Treino B - Costas e Bíceps", ['costas_01', 'costas_02', 'biceps_01']);
                 }
+                
+                // Recuperar sessão ativa do localStorage
+                this.activeSession.loadSession();
             },
 
             save() {
@@ -202,6 +290,101 @@
             }
         };
 
+        // --- UI HELPERS (Substituindo alerts/confirms nativos) ---
+        const ui = {
+            toastTimeout: null,
+
+            showModal({ title, message, type = 'info', onConfirm, onCancel, confirmText = 'Confirmar', cancelText = 'Cancelar' }) {
+                const container = document.getElementById('modal-container');
+                container.classList.remove('hidden');
+                
+                let icon = '';
+                let btnClass = 'bg-blue-600 hover:bg-blue-500 shadow-blue-900/20';
+
+                if (type === 'danger') {
+                    icon = '<div class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-red-900/30 sm:mx-0 sm:h-12 sm:w-12 mb-5 ring-1 ring-red-500/50"><i class="fa-solid fa-triangle-exclamation text-red-500 text-2xl"></i></div>';
+                    btnClass = 'bg-red-600 hover:bg-red-500 shadow-red-900/20';
+                } else if (type === 'success') {
+                    icon = '<div class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-emerald-900/30 sm:mx-0 sm:h-12 sm:w-12 mb-5 ring-1 ring-emerald-500/50"><i class="fa-solid fa-check text-emerald-500 text-2xl"></i></div>';
+                    btnClass = 'bg-emerald-600 hover:bg-emerald-500 shadow-emerald-900/20';
+                } else {
+                     icon = '<div class="mx-auto flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full bg-blue-900/30 sm:mx-0 sm:h-12 sm:w-12 mb-5 ring-1 ring-blue-500/50"><i class="fa-solid fa-info text-blue-500 text-2xl"></i></div>';
+                }
+
+                const isConfirm = !!onConfirm;
+
+                container.innerHTML = `
+                    <div class="relative transform overflow-hidden rounded-2xl bg-slate-800 text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-700 w-full max-w-xs mx-auto fade-in ring-1 ring-white/10">
+                        <div class="bg-slate-800 px-6 pb-6 pt-8">
+                            <div class="flex flex-col items-center text-center">
+                                ${icon}
+                                <div class="mt-2 text-center w-full">
+                                    <h3 class="text-xl font-bold leading-6 text-white mb-2" id="modal-title">${title}</h3>
+                                    <div class="mt-2">
+                                        <p class="text-base text-slate-400 leading-relaxed">${message}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900/50 px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+                            ${isConfirm ? `
+                                <button type="button" id="modal-confirm-btn" class="inline-flex w-full justify-center rounded-xl ${btnClass} px-4 py-3 text-base font-bold text-white shadow-lg sm:ml-3 sm:w-auto transition transform active:scale-[0.98]">
+                                    ${confirmText}
+                                </button>
+                                <button type="button" id="modal-cancel-btn" class="inline-flex w-full justify-center rounded-xl bg-slate-800 px-4 py-3 text-base font-semibold text-slate-300 shadow-sm ring-1 ring-inset ring-slate-600 hover:bg-slate-700 sm:mt-0 sm:w-auto transition active:scale-[0.98]">
+                                    ${cancelText}
+                                </button>
+                            ` : `
+                                <button type="button" id="modal-ok-btn" class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-4 py-3 text-base font-bold text-white shadow-lg hover:bg-blue-500 sm:ml-3 sm:w-auto transition transform active:scale-[0.98]">
+                                    Entendi
+                                </button>
+                            `}
+                        </div>
+                    </div>
+                `;
+
+                const close = () => {
+                    container.classList.add('hidden');
+                    container.innerHTML = '';
+                };
+
+                if (isConfirm) {
+                    document.getElementById('modal-confirm-btn').onclick = () => { close(); onConfirm(); };
+                    document.getElementById('modal-cancel-btn').onclick = () => { close(); if(onCancel) onCancel(); };
+                } else {
+                    document.getElementById('modal-ok-btn').onclick = () => { close(); if(onConfirm) onConfirm(); };
+                }
+            },
+
+            showToast(message, type = 'success') {
+                let toastContainer = document.getElementById('toast-container');
+                if (!toastContainer) {
+                    toastContainer = document.createElement('div');
+                    toastContainer.id = 'toast-container';
+                    toastContainer.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 z-[60] flex flex-col gap-2 w-max max-w-xs';
+                    document.body.appendChild(toastContainer);
+                }
+
+                const toast = document.createElement('div');
+                const bgClass = type === 'success' ? 'bg-emerald-600' : (type === 'error' ? 'bg-red-600' : 'bg-blue-600');
+                
+                toast.className = `${bgClass} text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 text-sm font-medium fade-in shadow-black/30`;
+                toast.innerHTML = `
+                    <i class="fa-solid ${type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-circle-exclamation' : 'fa-info-circle')}"></i>
+                    <span>${message}</span>
+                `;
+
+                toastContainer.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(-10px)';
+                    toast.style.transition = 'all 0.3s';
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+        };
+
         // --- 3. ROTEAMENTO E VIEWS ---
         const router = {
             currentView: 'home',
@@ -211,15 +394,21 @@
                 
                 // Atualiza abas
                 document.querySelectorAll('.nav-btn').forEach(btn => {
-                    if(btn.dataset.target === view) {
+                    // Remove state ativo de todos
+                    btn.classList.remove('text-blue-400', 'text-blue-500'); 
+                    btn.classList.add('text-slate-400');
+                    
+                    // Caso especial: Botão de Treino Ativo sempre tem destaque se visível, mas mudamos a cor se for a view atual
+                    if (btn.id === 'nav-active-session') {
+                         btn.classList.remove('text-slate-400'); // Ele já é colorido por padrão, mas ok reforçar
+                         if (view === 'active-session') {
+                             btn.classList.add('text-blue-400'); // Ativo na view
+                         } else {
+                             btn.classList.add('text-blue-500'); // Ativo em background
+                         }
+                    } else if (btn.dataset.target === view) {
                         btn.classList.add('text-blue-400');
                         btn.classList.remove('text-slate-400');
-                    } else if (['home', 'history', 'exercises', 'settings'].includes(view)) {
-                        // Só limpa se for navegar para uma das abas principais
-                        if (['home', 'history', 'exercises', 'settings'].includes(btn.dataset.target)) {
-                            btn.classList.remove('text-blue-400');
-                            btn.classList.add('text-slate-400');
-                        }
                     }
                 });
 
@@ -286,7 +475,7 @@
                                     <button onclick="router.navigate('create-plan', '${plan.id}')" aria-label="Editar plano" class="text-blue-400 hover:text-blue-300 p-2 rounded-full hover:bg-blue-900/30 transition">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
-                                    <button onclick="store.deletePlan('${plan.id}'); router.navigate('home')" aria-label="Excluir plano" class="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-red-900/30 transition">
+                                    <button onclick="ui.showModal({ title: 'Excluir Plano', message: 'Tem certeza que deseja excluir este plano?', type: 'danger', confirmText: 'Excluir', onConfirm: () => { store.deletePlan('${plan.id}'); router.navigate('home'); ui.showToast('Plano excluído'); } })" aria-label="Excluir plano" class="text-red-400 hover:text-red-300 p-2 rounded-full hover:bg-red-900/30 transition">
                                         <i class="fa-solid fa-trash"></i>
                                     </button>
                                 </div>
@@ -397,8 +586,10 @@
                     const name = document.getElementById('plan-name').value || 'Treino Sem Nome';
                     if (planId) {
                         store.updatePlan(planId, name, selectedExercises);
+                        ui.showToast('Plano atualizado com sucesso!');
                     } else {
                         store.createPlan(name, selectedExercises);
+                        ui.showToast('Plano criado com sucesso!');
                     }
                     router.navigate('home');
                 });
@@ -409,212 +600,172 @@
 
             // --- VIEW: SESSÃO ATIVA (TREINO) ---
             renderActiveSession(container, headerActions, planId) {
+                // Se não passou ID, tenta recuperar da sessão ativa
+                if (!planId && store.activeSession.current) {
+                    planId = store.activeSession.current.planId;
+                }
+
                 const plan = store.data.plans.find(p => p.id === planId);
+                
+                // Se não achou plano nem na URL nem na sessão ativa, volta pra home
                 if (!plan) return router.navigate('home');
 
-                // 1. Carregar dados do último treino (Persistência)
+                // Busca último log para histórico/PR (Disponível para todo o escopo)
                 const lastLog = store.data.logs.find(l => l.workoutId === plan.id || l.planName === plan.name);
-                
-                const initialExercises = plan.exercises.map(ex => {
-                    let sets = [];
-                    // Tenta carregar do histórico
-                    if (lastLog) {
-                        const lastEx = lastLog.details.find(d => d.exerciseId === ex.id);
-                        if (lastEx && lastEx.sets.length > 0) {
-                            sets = lastEx.sets.map(s => ({
-                                weight: s.weight,
-                                reps: s.reps,
-                                done: false // Sempre começa como não feito
-                            }));
-                        }
+
+                // Lógica de Inicialização Global
+                if (!store.activeSession.current || store.activeSession.current.planId !== planId) {
+                    if (store.activeSession.current && store.activeSession.current.planId !== planId) {
+                        ui.showModal({
+                            title: 'Treino em Andamento',
+                            message: 'Já existe um treino em andamento. Deseja cancelar o atual e iniciar este?',
+                            type: 'info',
+                            onConfirm: () => {
+                                store.activeSession.end();
+                                initSession();
+                            },
+                            onCancel: () => router.navigate('home')
+                        });
+                        return; // Para execução até confirmar
+                    } else {
+                        initSession();
                     }
-                    
-                    // Se não tiver histórico, inicia com 1 série vazia
-                    if (sets.length === 0) {
-                        sets.push({ weight: '', reps: '', done: false });
-                    }
-                    
-                    return {
-                        id: ex.id,
-                        activeSetIndex: 0, // Estado do foco visual
-                        skipped: false, // Estado de "Pular Exercício"
-                        sets: sets
-                    };
-                });
+                } else {
+                    renderSession();
+                }
 
-                // Estado local da sessão
-                let sessionData = {
-                    startTime: Date.now(),
-                    exercises: initialExercises
-                };
-
-                // Timer
-                let timerInterval;
-                const updateTimer = () => {
-                    const now = Date.now();
-                    const diff = Math.floor((now - sessionData.startTime) / 1000);
-                    const m = Math.floor(diff / 60).toString().padStart(2, '0');
-                    const s = (diff % 60).toString().padStart(2, '0');
-                    const timerEl = document.getElementById('session-timer');
-                    if(timerEl) timerEl.innerText = `${m}:${s}`;
-                };
-
-                headerActions.innerHTML = `<div id="session-timer" aria-label="Tempo de treino" class="font-mono text-xl text-blue-400 font-bold">00:00</div>`;
-                timerInterval = setInterval(updateTimer, 1000);
-
-                const renderInitialSession = () => {
-                    let html = `<div class="pb-10 fade-in space-y-8">`;
-                    
-                    html += `<h2 class="text-2xl font-bold text-white mb-4 border-b border-slate-700 pb-4">${plan.name}</h2>`;
-
-                    sessionData.exercises.forEach((sessionEx, exIndex) => {
-                        const exDef = exerciseDB.find(db => db.id === sessionEx.id);
-                        const isSkipped = sessionEx.skipped;
+                function initSession() {
+                    const initialExercises = plan.exercises.map(ex => {
+                        let sets = [];
                         
-                        // Encontra maior carga histórica para referência
-                        let maxWeight = '-';
-                        if(lastLog) {
-                            const oldEx = lastLog.details.find(d => d.exerciseId === sessionEx.id);
-                            if(oldEx && oldEx.sets.length > 0) {
-                                maxWeight = Math.max(...oldEx.sets.map(s => Number(s.weight) || 0)) + 'kg';
+                        // Busca o último registro válido para este exercício em TODO o histórico
+                        // Ordena logs por data (do mais recente para o mais antigo) - já deve estar assim por padrão no store.data.logs.unshift
+                        // Mas para garantir:
+                        const sortedLogs = [...store.data.logs].sort((a, b) => new Date(b.date) - new Date(a.date));
+                        
+                        let lastValidSets = null;
+
+                        for (const log of sortedLogs) {
+                            const details = log.details.find(d => d.exerciseId === ex.id);
+                            // Verifica se existe o detalhe e se tem sets com dados válidos (pelo menos peso ou repetições preenchidos)
+                            if (details && details.sets && details.sets.length > 0) {
+                                // Verifica se tem pelo menos um set com dados
+                                const hasData = details.sets.some(s => (s.weight !== '' && s.weight != null) || (s.reps !== '' && s.reps != null));
+                                if (hasData) {
+                                    lastValidSets = details.sets;
+                                    break; // Encontrou, para de procurar
+                                }
                             }
                         }
 
-                        html += `
-                            <div id="exercise-block-${exIndex}" class="space-y-3 transition-all duration-300 ${isSkipped ? 'opacity-50 grayscale' : ''}">
-                                <div class="flex justify-between items-center px-1">
-                                    <div class="flex flex-col">
-                                        <h3 class="font-bold text-xl text-blue-400 flex items-center gap-2">
-                                            ${exDef.name}
-                                            ${isSkipped ? '<span class="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase">Pulado</span>' : ''}
-                                        </h3>
-                                        <span class="text-xs text-slate-400 font-mono">PR: ${maxWeight}</span>
-                                    </div>
-                                    <button onclick="toggleExerciseSkip(${exIndex})" class="text-xs font-bold px-3 py-1.5 rounded-lg border transition ${isSkipped ? 'bg-slate-700 text-white border-slate-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'}">
-                                        <i class="fa-solid ${isSkipped ? 'fa-rotate-left' : 'fa-forward'} mr-1"></i> ${isSkipped ? 'Desfazer' : 'Pular'}
-                                    </button>
-                                </div>
-                                
-                                <div class="space-y-4 py-2 ${isSkipped ? 'pointer-events-none' : ''}" id="sets-container-${exIndex}">
-                                    ${renderSetsHTML(exIndex)}
-                                </div>
-
-                                <button onclick="addSet(${exIndex})" ${isSkipped ? 'disabled' : ''} class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-sm rounded-xl border border-dashed border-slate-600 hover:border-blue-500 transition flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
-                                    <i class="fa-solid fa-plus group-hover:scale-110 transition-transform"></i> Adicionar Série
-                                </button>
-                            </div>
-                        `;
+                        if (lastValidSets) {
+                            sets = lastValidSets.map(s => ({
+                                weight: s.weight,
+                                reps: s.reps,
+                                done: false 
+                            }));
+                        }
+                        
+                        if (sets.length === 0) sets.push({ weight: '', reps: '', done: false });
+                        
+                        return {
+                            id: ex.id,
+                            activeSetIndex: 0, 
+                            skipped: false,    
+                            sets: sets
+                        };
                     });
 
-                    html += `
-                        <div class="pt-4 space-y-3">
-                            <button onclick="finishSession()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 text-lg hover:bg-blue-500 active:scale-[0.98] transition">
-                                <i class="fa-solid fa-check-double mr-2"></i> FINALIZAR TREINO
-                            </button>
-                            <button onclick="cancelSession()" class="w-full text-slate-400 py-3 text-sm hover:text-white transition">
-                                Cancelar Treino
-                            </button>
-                        </div>
-                    </div>`;
+                    store.activeSession.start(plan, initialExercises);
+                    renderSession();
+                }
 
-                    container.innerHTML = html;
-                };
+                function renderSession() {
+                    // Recupera a sessão (seja recém criada ou existente)
+                    const sessionData = store.activeSession.current;
 
-                // Helper para gerar HTML de todos os sets de um exercício
-                const renderSetsHTML = (exIndex) => {
-                    const exData = sessionData.exercises[exIndex];
-                    return exData.sets.map((set, setIndex) => generateSetHTML(exIndex, setIndex, set, exData.activeSetIndex === setIndex)).join('');
-                };
+                    // Reinicia o timer visual
+                    store.activeSession.startTimer(); 
 
-                // Helper para gerar HTML de um set individual
-                const generateSetHTML = (exIndex, setIndex, set, isActive) => {
-                    const isDone = set.done;
-                    
-                    // Estilos baseados no estado (Ativo vs Inativo vs Done)
-                    let wrapperClass = "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 ease-out origin-center ";
-                    let bgClass = "";
-                    
-                    if (isActive) {
-                        wrapperClass += "scale-105 z-10 shadow-xl ring-1 ring-blue-500/50 ";
-                        bgClass = isDone ? "bg-emerald-900/30 border-emerald-500" : "bg-slate-800 border-blue-500/50";
-                    } else {
-                        wrapperClass += "scale-95 opacity-60 blur-[0.5px] grayscale-[0.3] hover:opacity-100 hover:scale-100 hover:blur-0 hover:grayscale-0 ";
-                        bgClass = isDone ? "bg-emerald-900/20 border-emerald-500/30" : "bg-slate-800/50 border-slate-700";
-                    }
+                    headerActions.innerHTML = `<div id="session-timer" aria-label="Tempo de treino" class="font-mono text-xl text-blue-400 font-bold">00:00</div>`;
 
-                    return `
-                        <div id="set-row-${exIndex}-${setIndex}" class="${wrapperClass} ${bgClass}" onclick="setActiveSet(${exIndex}, ${setIndex})">
+                    const renderInitialSession = () => {
+                        let html = `<div class="pb-10 fade-in space-y-8">`;
+                        
+                        html += `<h2 class="text-2xl font-bold text-white mb-4 border-b border-slate-700 pb-4">${plan.name}</h2>`;
+
+                        sessionData.exercises.forEach((sessionEx, exIndex) => {
+                            const exDef = exerciseDB.find(db => db.id === sessionEx.id);
+                            const isSkipped = sessionEx.skipped;
                             
-                            <div class="flex flex-col items-center justify-center w-8">
-                                <span class="text-xs font-bold text-slate-500 mb-1">SET</span>
-                                <span class="text-lg font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-slate-300'}">${setIndex + 1}</span>
-                            </div>
+                            // Encontra maior carga histórica para referência (PR)
+                            let maxWeight = '-';
+                            // Varre todos logs para achar PR
+                            store.data.logs.forEach(l => {
+                                const d = l.details.find(det => det.exerciseId === sessionEx.id);
+                                if(d && d.sets) {
+                                    d.sets.forEach(s => {
+                                        const w = Number(s.weight);
+                                        if(!isNaN(w) && (maxWeight === '-' || w > parseFloat(maxWeight))) {
+                                            maxWeight = w + 'kg';
+                                        }
+                                    });
+                                }
+                            });
 
-                            <div class="flex-1 grid grid-cols-2 gap-3">
-                                <div class="relative">
-                                    <input type="number" value="${set.weight}" inputmode="decimal" aria-label="Peso em kg"
-                                        oninput="updateSet(${exIndex}, ${setIndex}, 'weight', this.value)" 
-                                        onfocus="setActiveSet(${exIndex}, ${setIndex})"
-                                        class="w-full bg-slate-900/50 border ${isDone ? 'border-emerald-500/30 text-emerald-100' : 'border-slate-600 text-white'} rounded-lg py-2.5 pl-3 pr-8 font-mono text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
-                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">KG</span>
+                            html += `
+                                <div id="exercise-block-${exIndex}" class="space-y-3 transition-all duration-300 ${isSkipped ? 'opacity-50 grayscale' : ''}">
+                                    <div class="flex justify-between items-center px-1">
+                                        <div class="flex flex-col">
+                                                                                    <h3 class="font-bold text-xl text-blue-400 flex items-center gap-2">
+                                                                                        ${exDef.name}
+                                                                                        ${isSkipped ? '<span class="skipped-badge ml-2 px-3 py-1 bg-slate-700/80 text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-full border border-slate-600 shadow-sm backdrop-blur-sm">Pulado</span>' : ''}
+                                                                                    </h3>                                            <span class="text-xs text-slate-400 font-mono">PR: ${maxWeight}</span>
+                                        </div>
+                                        <button onclick="toggleExerciseSkip(${exIndex})" class="text-xs font-bold px-3 py-1.5 rounded-lg border transition ${isSkipped ? 'bg-slate-700 text-white border-slate-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'}">
+                                            <i class="fa-solid ${isSkipped ? 'fa-rotate-left' : 'fa-forward'} mr-1"></i> ${isSkipped ? 'Desfazer' : 'Pular'}
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="space-y-4 py-2 ${isSkipped ? 'pointer-events-none' : ''}" id="sets-container-${exIndex}">
+                                        ${renderSetsHTML(exIndex)}
+                                    </div>
+
+                                    <button onclick="addSet(${exIndex})" ${isSkipped ? 'disabled' : ''} class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-blue-400 font-semibold text-sm rounded-xl border border-dashed border-slate-600 hover:border-blue-500 transition flex items-center justify-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed">
+                                        <i class="fa-solid fa-plus group-hover:scale-110 transition-transform"></i> Adicionar Série
+                                    </button>
                                 </div>
-                                <div class="relative">
-                                    <input type="number" value="${set.reps}" inputmode="numeric" aria-label="Repetições"
-                                        oninput="updateSet(${exIndex}, ${setIndex}, 'reps', this.value)"
-                                        onfocus="setActiveSet(${exIndex}, ${setIndex})" 
-                                        class="w-full bg-slate-900/50 border ${isDone ? 'border-emerald-500/30 text-emerald-100' : 'border-slate-600 text-white'} rounded-lg py-2.5 pl-3 pr-8 font-mono text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
-                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">R</span>
-                                </div>
+                            `;
+                        });
+
+                        html += `
+                            <div class="pt-4 space-y-3">
+                                <button onclick="finishSession()" class="w-full bg-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 text-lg hover:bg-blue-500 active:scale-[0.98] transition">
+                                    <i class="fa-solid fa-check-double mr-2"></i> FINALIZAR TREINO
+                                </button>
+                                <button onclick="cancelSession()" class="w-full text-slate-400 py-3 text-sm hover:text-white transition">
+                                    Cancelar Treino
+                                </button>
                             </div>
+                        </div>`;
 
-                            <button id="btn-check-${exIndex}-${setIndex}" onclick="toggleSetDone(event, ${exIndex}, ${setIndex})" aria-label="Marcar série como concluída"
-                                class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 ${isDone ? 'bg-emerald-500 text-white shadow-emerald-900/50' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}">
-                                <i class="fa-solid fa-check text-xl"></i>
-                            </button>
-                        </div>
-                    `;
-                };
-
-                // Funções globais otimizadas
-                window.addSet = (exIndex) => {
-                    const exData = sessionData.exercises[exIndex];
-                    const prevSet = exData.sets[exData.sets.length - 1];
-                    
-                    const newSet = { 
-                        weight: prevSet ? prevSet.weight : '', 
-                        reps: prevSet ? prevSet.reps : '', 
-                        done: false 
+                        container.innerHTML = html;
                     };
-                    
-                    exData.sets.push(newSet);
-                    // Novo set vira o ativo
-                    exData.activeSetIndex = exData.sets.length - 1;
-                    
-                    // Re-renderiza a lista de sets deste exercício para aplicar estilos
-                    const container = document.getElementById(`sets-container-${exIndex}`);
-                    container.innerHTML = renderSetsHTML(exIndex);
-                };
 
-                window.setActiveSet = (exIndex, setIndex) => {
-                    if (sessionData.exercises[exIndex].activeSetIndex === setIndex) return;
-                    
-                    sessionData.exercises[exIndex].activeSetIndex = setIndex;
-                    const container = document.getElementById(`sets-container-${exIndex}`);
-                    
-                    // Atualização eficiente via innerHTML (Rápida o suficiente para < 10 items)
-                    // Manter foco é tricky se recriar tudo.
-                    // Melhor abordagem: Atualizar classes manualmente para não perder foco do input
-                    
-                    const rows = container.children;
-                    for (let i = 0; i < rows.length; i++) {
-                        const row = rows[i];
-                        const isActive = (i === setIndex);
-                        const isDone = sessionData.exercises[exIndex].sets[i].done;
+                    // Helper para gerar HTML de todos os sets de um exercício
+                    const renderSetsHTML = (exIndex) => {
+                        const exData = sessionData.exercises[exIndex];
+                        return exData.sets.map((set, setIndex) => generateSetHTML(exIndex, setIndex, set, exData.activeSetIndex === setIndex)).join('');
+                    };
 
-                        // Recalcula classes
+                    // Helper para gerar HTML de um set individual
+                    const generateSetHTML = (exIndex, setIndex, set, isActive) => {
+                        const isDone = set.done;
+                        
+                        // Estilos baseados no estado (Ativo vs Inativo vs Done)
                         let wrapperClass = "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 ease-out origin-center ";
                         let bgClass = "";
-
+                        
                         if (isActive) {
                             wrapperClass += "scale-105 z-10 shadow-xl ring-1 ring-blue-500/50 ";
                             bgClass = isDone ? "bg-emerald-900/30 border-emerald-500" : "bg-slate-800 border-blue-500/50";
@@ -622,161 +773,200 @@
                             wrapperClass += "scale-95 opacity-60 blur-[0.5px] grayscale-[0.3] hover:opacity-100 hover:scale-100 hover:blur-0 hover:grayscale-0 ";
                             bgClass = isDone ? "bg-emerald-900/20 border-emerald-500/30" : "bg-slate-800/50 border-slate-700";
                         }
-                        
-                        row.className = wrapperClass + bgClass;
-                    }
-                };
 
-                window.updateSet = (exIndex, setIndex, field, value) => {
-                    sessionData.exercises[exIndex].sets[setIndex][field] = value;
-                };
+                        return `
+                            <div id="set-row-${exIndex}-${setIndex}" class="${wrapperClass} ${bgClass}" onclick="setActiveSet(${exIndex}, ${setIndex})">
+                                
+                                <div class="flex flex-col items-center justify-center w-8">
+                                    <span class="text-xs font-bold text-slate-500 mb-1">SET</span>
+                                    <span class="text-lg font-mono font-bold ${isDone ? 'text-emerald-400' : 'text-slate-300'}">${setIndex + 1}</span>
+                                </div>
 
-                window.toggleExerciseSkip = (exIndex) => {
-                    const exData = sessionData.exercises[exIndex];
-                    exData.skipped = !exData.skipped;
-                    const isSkipped = exData.skipped;
+                                <div class="flex-1 grid grid-cols-2 gap-3">
+                                    <div class="relative">
+                                        <input type="number" value="${set.weight}" inputmode="decimal" aria-label="Peso em kg"
+                                            oninput="updateSet(${exIndex}, ${setIndex}, 'weight', this.value)" 
+                                            onfocus="setActiveSet(${exIndex}, ${setIndex})"
+                                            class="w-full bg-slate-900/50 border ${isDone ? 'border-emerald-500/30 text-emerald-100' : 'border-slate-600 text-white'} rounded-lg py-2.5 pl-3 pr-8 font-mono text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">KG</span>
+                                    </div>
+                                    <div class="relative">
+                                        <input type="number" value="${set.reps}" inputmode="numeric" aria-label="Repetições"
+                                            oninput="updateSet(${exIndex}, ${setIndex}, 'reps', this.value)"
+                                            onfocus="setActiveSet(${exIndex}, ${setIndex})" 
+                                            class="w-full bg-slate-900/50 border ${isDone ? 'border-emerald-500/30 text-emerald-100' : 'border-slate-600 text-white'} rounded-lg py-2.5 pl-3 pr-8 font-mono text-lg focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-500 font-bold pointer-events-none">R</span>
+                                    </div>
+                                </div>
 
-                    // Manipulação direta do DOM para evitar reload
-                    const block = document.getElementById(`exercise-block-${exIndex}`);
-                    const setsContainer = document.getElementById(`sets-container-${exIndex}`);
-                    const titleContainer = block.querySelector('h3');
-                    const skipBtn = block.querySelector('button[onclick^="toggleExerciseSkip"]');
-                    const addSetBtn = block.querySelector('button[onclick^="addSet"]');
+                                <button id="btn-check-${exIndex}-${setIndex}" onclick="toggleSetDone(event, ${exIndex}, ${setIndex})" aria-label="Marcar série como concluída"
+                                    class="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 ${isDone ? 'bg-emerald-500 text-white shadow-emerald-900/50' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}">
+                                    <i class="fa-solid fa-check text-xl"></i>
+                                </button>
+                            </div>
+                        `;
+                    };
 
-                    // 1. Estilo do Bloco
-                    if (isSkipped) {
-                        block.classList.add('opacity-50', 'grayscale');
-                    } else {
-                        block.classList.remove('opacity-50', 'grayscale');
-                    }
+                    window.addSet = (exIndex) => {
+                        const exData = store.activeSession.current.exercises[exIndex];
+                        const prevSet = exData.sets[exData.sets.length - 1];
+                        const newSet = { 
+                            weight: prevSet ? prevSet.weight : '', 
+                            reps: prevSet ? prevSet.reps : '', 
+                            done: false 
+                        };
+                        exData.sets.push(newSet);
+                        exData.activeSetIndex = exData.sets.length - 1;
+                        store.activeSession.saveSession(); // PERSISTENCIA
+                        document.getElementById(`sets-container-${exIndex}`).innerHTML = renderSetsHTML(exIndex);
+                    };
 
-                    // 2. Botão Pular
-                    skipBtn.className = `text-xs font-bold px-3 py-1.5 rounded-lg border transition ${isSkipped ? 'bg-slate-700 text-white border-slate-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'}`;
-                    skipBtn.innerHTML = `<i class="fa-solid ${isSkipped ? 'fa-rotate-left' : 'fa-forward'} mr-1"></i> ${isSkipped ? 'Desfazer' : 'Pular'}`;
+                    window.setActiveSet = (exIndex, setIndex) => {
+                        if (store.activeSession.current.exercises[exIndex].activeSetIndex === setIndex) return;
+                        store.activeSession.current.exercises[exIndex].activeSetIndex = setIndex;
+                        const container = document.getElementById(`sets-container-${exIndex}`);
+                        const rows = container.children;
+                        for (let i = 0; i < rows.length; i++) {
+                            const row = rows[i];
+                            const isActive = (i === setIndex);
+                            const isDone = store.activeSession.current.exercises[exIndex].sets[i].done;
+                            let wrapperClass = "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 ease-out origin-center ";
+                            let bgClass = "";
+                            if (isActive) {
+                                wrapperClass += "scale-105 z-10 shadow-xl ring-1 ring-blue-500/50 ";
+                                bgClass = isDone ? "bg-emerald-900/30 border-emerald-500" : "bg-slate-800 border-blue-500/50";
+                            } else {
+                                wrapperClass += "scale-95 opacity-60 blur-[0.5px] grayscale-[0.3] hover:opacity-100 hover:scale-100 hover:blur-0 hover:grayscale-0 ";
+                                bgClass = isDone ? "bg-emerald-900/20 border-emerald-500/30" : "bg-slate-800/50 border-slate-700";
+                            }
+                            row.className = wrapperClass + bgClass;
+                        }
+                    };
 
+                    window.updateSet = (exIndex, setIndex, field, value) => {
+                        store.activeSession.current.exercises[exIndex].sets[setIndex][field] = value;
+                        store.activeSession.saveSession(); // PERSISTENCIA
+                    };
+
+                    window.toggleExerciseSkip = (exIndex) => {
+                        const exData = store.activeSession.current.exercises[exIndex];
+                        exData.skipped = !exData.skipped;
+                        store.activeSession.saveSession(); // PERSISTENCIA
+                        const isSkipped = exData.skipped;
+                        const block = document.getElementById(`exercise-block-${exIndex}`);
+                        const setsContainer = document.getElementById(`sets-container-${exIndex}`);
+                        const titleContainer = block.querySelector('h3');
+                        const skipBtn = block.querySelector('button[onclick^="toggleExerciseSkip"]');
+                        const addSetBtn = block.querySelector('button[onclick^="addSet"]');
+                        if (isSkipped) block.classList.add('opacity-50', 'grayscale'); else block.classList.remove('opacity-50', 'grayscale');
+                        skipBtn.className = `text-xs font-bold px-3 py-1.5 rounded-lg border transition ${isSkipped ? 'bg-slate-700 text-white border-slate-500' : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white hover:border-slate-500'}`;
+                        skipBtn.innerHTML = `<i class="fa-solid ${isSkipped ? 'fa-rotate-left' : 'fa-forward'} mr-1"></i> ${isSkipped ? 'Desfazer' : 'Pular'}`;
                     // 3. Badge "Pulado"
                     const badge = titleContainer.querySelector('.skipped-badge');
                     if (isSkipped && !badge) {
-                        titleContainer.insertAdjacentHTML('beforeend', ' <span class="skipped-badge text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded uppercase fade-in">Pulado</span>');
+                        titleContainer.insertAdjacentHTML('beforeend', ' <span class="skipped-badge ml-2 px-3 py-1 bg-slate-700/80 text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-full border border-slate-600 shadow-sm backdrop-blur-sm fade-in">Pulado</span>');
                     } else if (!isSkipped && badge) {
                         badge.remove();
                     }
-
-                    // 4. Container de Sets (Desabilitar interação)
-                    if (isSkipped) {
-                        setsContainer.classList.add('pointer-events-none');
-                    } else {
-                        setsContainer.classList.remove('pointer-events-none');
-                    }
-
-                    // 5. Botão Adicionar Série
-                    addSetBtn.disabled = isSkipped;
-                    if(isSkipped) {
-                        addSetBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    } else {
-                        addSetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                    }
-                };
-
-                window.toggleSetDone = (event, exIndex, setIndex) => {
-                    event.stopPropagation(); // Evita acionar o setActiveSet do container
-                    const exData = sessionData.exercises[exIndex];
-                    const set = exData.sets[setIndex];
-                    
-                    // Validação: Não permitir check se reps for vazio/zero
-                    if (!set.done && (!set.reps || set.reps <= 0)) {
-                        alert("Por favor, preencha as repetições antes de marcar como feito.");
-                        return;
-                    }
-
-                    set.done = !set.done;
-                    
-                    // Se marcou como feito e não é o último, avança foco para o próximo
-                    if (set.done && setIndex < exData.sets.length - 1) {
-                        setActiveSet(exIndex, setIndex + 1);
-                    } else {
-                        // Apenas atualiza visual do atual
-                        setActiveSet(exIndex, setIndex); // Força refresh de estilos (verde/azul)
-                    }
-
-                    // Atualiza botão especificamente (ícone/cor)
-                    const btn = document.getElementById(`btn-check-${exIndex}-${setIndex}`);
-                    const indexLabel = document.querySelector(`#set-row-${exIndex}-${setIndex} .font-mono.font-bold`);
-                    const inputs = document.querySelectorAll(`#set-row-${exIndex}-${setIndex} input`);
-
-                    if (set.done) {
-                        btn.className = 'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 bg-emerald-500 text-white shadow-emerald-900/50';
-                        if(indexLabel) indexLabel.classList.replace('text-slate-300', 'text-emerald-400');
-                        inputs.forEach(input => {
-                            input.classList.remove('border-slate-600', 'text-white');
-                            input.classList.add('border-emerald-500/30', 'text-emerald-100');
-                        });
-                    } else {
-                        btn.className = 'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 bg-slate-700 text-slate-400 hover:bg-slate-600';
-                        if(indexLabel) indexLabel.classList.replace('text-emerald-400', 'text-slate-300');
-                        inputs.forEach(input => {
-                            input.classList.remove('border-emerald-500/30', 'text-emerald-100');
-                            input.classList.add('border-slate-600', 'text-white');
-                        });
-                    }
-                };
-
-                window.finishSession = () => {
-                    // Validação de "Tudo Feito ou Pulado"
-                    const incompleteExercises = sessionData.exercises.filter(ex => {
-                        // Se pulado, conta como completo
-                        if (ex.skipped) return false;
-                        
-                        // Se não pulado, precisa ter pelo menos 1 set feito?
-                        // O usuário pediu "tudo marcado como feito ou não feito".
-                        // Vamos considerar que se não está pulado, precisa ter pelo menos 1 série feita.
-                        const hasDoneSets = ex.sets.some(s => s.done);
-                        return !hasDoneSets;
-                    });
-
-                    if (incompleteExercises.length > 0) {
-                        const names = incompleteExercises.map(ex => {
-                            const def = exerciseDB.find(d => d.id === ex.id);
-                            return def ? def.name : 'Exercício';
-                        }).join(', ');
-                        
-                        alert(`Você tem exercícios pendentes: \n${names}\n\nPor favor, marque pelo menos uma série como feita ou pule o exercício.`);
-                        return;
-                    }
-
-                    if(!confirm('Finalizar e salvar treino?')) return;
-                    clearInterval(timerInterval);
-                    
-                    // Salvar apenas exercícios não pulados e séries feitas
-                    const cleanDetails = sessionData.exercises
-                        .filter(ex => !ex.skipped) // Ignora exercícios pulados no log final
-                        .map(ex => ({
-                            exerciseId: ex.id,
-                            sets: ex.sets.filter(s => s.done)
-                        }))
-                        .filter(ex => ex.sets.length > 0);
-
-                    const log = {
-                        id: Date.now().toString(),
-                        workoutId: plan.id,
-                        planName: plan.name,
-                        date: new Date().toISOString(),
-                        duration: Math.floor((Date.now() - sessionData.startTime) / 1000),
-                        details: cleanDetails
+                        if (isSkipped) setsContainer.classList.add('pointer-events-none'); else setsContainer.classList.remove('pointer-events-none');
+                        addSetBtn.disabled = isSkipped;
+                        if(isSkipped) addSetBtn.classList.add('opacity-50', 'cursor-not-allowed'); else addSetBtn.classList.remove('opacity-50', 'cursor-not-allowed');
                     };
 
-                    store.saveLog(log);
-                    router.navigate('history');
-                };
+                    window.toggleSetDone = (event, exIndex, setIndex) => {
+                        event.stopPropagation();
+                        const exData = store.activeSession.current.exercises[exIndex];
+                        const set = exData.sets[setIndex];
+                        if (!set.done && (!set.reps || set.reps <= 0)) {
+                            ui.showToast("Preencha as repetições antes de marcar como feito.", "error");
+                            return;
+                        }
+                        set.done = !set.done;
+                        store.activeSession.saveSession(); // PERSISTENCIA
+                        if (set.done && setIndex < exData.sets.length - 1) setActiveSet(exIndex, setIndex + 1);
+                        else setActiveSet(exIndex, setIndex);
+                        const btn = document.getElementById(`btn-check-${exIndex}-${setIndex}`);
+                        const indexLabel = document.querySelector(`#set-row-${exIndex}-${setIndex} .font-mono.font-bold`);
+                        const inputs = document.querySelectorAll(`#set-row-${exIndex}-${setIndex} input`);
+                        if (set.done) {
+                            btn.className = 'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 bg-emerald-500 text-white shadow-emerald-900/50';
+                            if(indexLabel) indexLabel.classList.replace('text-slate-300', 'text-emerald-400');
+                            inputs.forEach(input => { input.classList.remove('border-slate-600', 'text-white'); input.classList.add('border-emerald-500/30', 'text-emerald-100'); });
+                        } else {
+                            btn.className = 'w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 shadow-md active:scale-90 shrink-0 bg-slate-700 text-slate-400 hover:bg-slate-600';
+                            if(indexLabel) indexLabel.classList.replace('text-emerald-400', 'text-slate-300');
+                            inputs.forEach(input => { input.classList.remove('border-emerald-500/30', 'text-emerald-100'); input.classList.add('border-slate-600', 'text-white'); });
+                        }
+                    };
 
-                window.cancelSession = () => {
-                    if(confirm('Cancelar treino atual? O progresso será perdido.')) {
-                        clearInterval(timerInterval);
-                        router.navigate('home');
-                    }
-                };
+                    window.finishSession = () => {
+                        const incompleteExercises = sessionData.exercises.filter(ex => {
+                            if (ex.skipped) return false;
+                            const hasDoneSets = ex.sets.some(s => s.done);
+                            return !hasDoneSets;
+                        });
 
-                renderInitialSession();
+                        if (incompleteExercises.length > 0) {
+                            const names = incompleteExercises.map(ex => {
+                                const def = exerciseDB.find(d => d.id === ex.id);
+                                return def ? def.name : 'Exercício';
+                            }).join(', ');
+                            
+                            ui.showModal({
+                                title: 'Exercícios Pendentes',
+                                message: `Você ainda não concluiu os seguintes exercícios: ${names}. Marque pelo menos uma série como feita ou pule o exercício para finalizar.`,
+                                type: 'info'
+                            });
+                            return;
+                        }
+
+                        ui.showModal({
+                            title: 'Finalizar Treino',
+                            message: 'Parabéns! Deseja finalizar e salvar o treino agora?',
+                            type: 'success',
+                            confirmText: 'Salvar Treino',
+                            onConfirm: () => {
+                                const cleanDetails = sessionData.exercises
+                                    .filter(ex => !ex.skipped)
+                                    .map(ex => ({
+                                        exerciseId: ex.id,
+                                        sets: ex.sets.filter(s => s.done)
+                                    }))
+                                    .filter(ex => ex.sets.length > 0);
+
+                                const log = {
+                                    id: Date.now().toString(),
+                                    workoutId: plan.id,
+                                    planName: plan.name,
+                                    date: new Date().toISOString(),
+                                    duration: Math.floor((Date.now() - sessionData.startTime) / 1000),
+                                    details: cleanDetails
+                                };
+
+                                store.saveLog(log);
+                                store.activeSession.end(); // Limpa estado e esconde aba
+                                ui.showToast('Treino salvo com sucesso!');
+                                router.navigate('history');
+                            }
+                        });
+                    };
+
+                    window.cancelSession = () => {
+                        ui.showModal({
+                            title: 'Cancelar Treino',
+                            message: 'Tem certeza? Todo o progresso deste treino será perdido.',
+                            type: 'danger',
+                            confirmText: 'Sim, Cancelar',
+                            onConfirm: () => {
+                                store.activeSession.end();
+                                router.navigate('home');
+                                ui.showToast('Treino cancelado', 'info');
+                            }
+                        });
+                    };
+
+                    renderInitialSession();
+                }
             },
 
             // --- VIEW: HISTÓRICO ---
